@@ -2,74 +2,80 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Club Haikyuu - Classement</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classement Club Haikyuu</title>
 <style>
-    body{
-        font-family: Arial, sans-serif;
-        background:#1f1f1f;
-        color:white;
-        margin:0;
-        padding:20px;
-    }
-    h1{
-        text-align:center;
-        color:#f7d25a; /* Jaune Bokuto */
-    }
-    .admin-section{
-        background:#2a2a2a;
-        padding:15px;
-        margin-bottom:20px;
-        border-radius:10px;
-        display:none;
-    }
-    input, button{
-        padding:8px;
-        margin:5px 0;
-        border:none;
-        border-radius:5px;
-    }
-    button{
-        cursor:pointer;
-        background:#f7d25a;
-        font-weight:bold;
-    }
-    table{
-        width:100%;
-        border-collapse:collapse;
-        margin-top:20px;
-    }
-    th, td{
-        border-bottom:1px solid #444;
-        padding:10px;
-        text-align:left;
-    }
-    .delete-btn{
-        background:#e74c3c;
-        color:white;
-    }
-    .edit-btn{
-        background:#3498db;
-        color:white;
-    }
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1f1f1f;
+    color: #fff;
+    margin: 0;
+    padding: 20px;
+}
+h1 {
+    color: #f7d25a;
+    text-align: center;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+th, td {
+    border: 1px solid #444;
+    padding: 10px;
+    text-align: center;
+}
+th {
+    background-color: #f7d25a;
+    color: #1f1f1f;
+}
+tr:nth-child(even) {
+    background-color: #2a2a2a;
+}
+button {
+    padding: 5px 10px;
+    margin: 2px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+button.modify { background-color: #4da6ff; color: #fff; }
+button.delete { background-color: #ff4d4d; color: #fff; }
+#admin-section { display: none; margin-top: 20px; text-align: center; }
+#admin-add { display: none; margin-top: 20px; text-align: center; }
+input[type="text"], input[type="number"], input[type="password"] {
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #444;
+    margin-right: 5px;
+}
 </style>
 </head>
 <body>
 
-<h1>Classement du Club Haikyuu</h1>
+<h1>Classement Club Haikyuu</h1>
 
-<div id="adminLogin">
-    <h3>Connexion Administrateur</h3>
-    <input type="password" id="adminPass" placeholder="Mot de passe admin">
-    <button onclick="checkAdmin()">Entrer</button>
+<!-- Login Admin -->
+<div id="admin-login">
+    <label>Mot de passe Admin : </label>
+    <input type="password" id="admin-pass">
+    <button onclick="checkAdmin()">Se connecter</button>
 </div>
 
-<div id="adminPanel" class="admin-section">
-    <h3>Panneau Administrateur</h3>
-    <input type="text" id="nameInput" placeholder="Nom">
-    <input type="number" id="pointsInput" placeholder="Points">
-    <button onclick="addMember()">Ajouter</button>
+<div id="admin-section">
+    <p>Bienvenue, Admin !</p>
 </div>
 
+<!-- Formulaire pour ajouter un joueur -->
+<div id="admin-add">
+    <h3>Ajouter un joueur</h3>
+    <input type="text" id="new-nom" placeholder="Nom">
+    <input type="number" id="new-points" placeholder="Points">
+    <button onclick="ajouterJoueur()">Ajouter</button>
+</div>
+
+<!-- Tableau -->
 <table>
     <thead>
         <tr>
@@ -78,98 +84,101 @@
             <th>Actions</th>
         </tr>
     </thead>
-    <tbody id="membersTable"></tbody>
+    <tbody id="table-body">
+        <!-- Rempli automatiquement depuis Google Sheets -->
+    </tbody>
 </table>
 
 <script>
-let ADMIN_PASSWORD = "bokutoPower";
+// === CONFIGURATION ===
+const ADMIN_PASS = "bokutoPower"; // Mot de passe admin
+let isAdmin = false;
 
-function checkAdmin(){
-    let input = document.getElementById("adminPass").value;
-    if(input === ADMIN_PASSWORD){
-        document.getElementById("adminPanel").style.display = "block";
-        document.getElementById("adminLogin").style.display = "none";
+// URL de ton Google Apps Script
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXPf1aGvNaFiVclrNLFB3zg5tZn7316GoSb9ZLvTvaWuNX46WpVn5-mAwz3gNpugV0/exec";
+
+// Connexion Admin
+function checkAdmin() {
+    const pass = document.getElementById('admin-pass').value;
+    if(pass === ADMIN_PASS){
+        isAdmin = true;
+        document.getElementById('admin-section').style.display = "block";
+        document.getElementById('admin-login').style.display = "none";
+        document.getElementById('admin-add').style.display = "block";
+        loadData();
     } else {
-        alert("Mot de passe incorrect");
+        alert("Mot de passe incorrect !");
     }
 }
 
-function loadMembers(){
-    let data = localStorage.getItem("members");
-    return data ? JSON.parse(data) : [];
+// Charger le tableau depuis Google Sheets
+function loadData() {
+    fetch(SCRIPT_URL)
+    .then(response => response.json())
+    .then(data => showInfo(data))
+    .catch(err => console.error("Erreur récupération données :", err));
 }
 
-function saveMembers(list){
-    localStorage.setItem("members", JSON.stringify(list));
-}
+// Afficher le tableau
+function showInfo(data) {
+    let tableBody = document.getElementById('table-body');
+    tableBody.innerHTML = "";
+    data.sort((a,b) => parseInt(b.Points) - parseInt(a.Points));
 
-function renderTable(){
-    let list = loadMembers();
-    let table = document.getElementById("membersTable");
-    table.innerHTML = "";
-
-    list.sort((a,b)=>b.points - a.points);
-
-    list.forEach((m,i)=>{
-        table.innerHTML += `
-            <tr>
-                <td>${m.name}</td>
-                <td>${m.points}</td>
-                <td>
-                    <button class="edit-btn" onclick="editPoints(${i})">Modifier</button>
-                    <button class="delete-btn" onclick="deleteMember(${i})">Supprimer</button>
-                </td>
-            </tr>`;
+    data.forEach(row => {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `<td>${row.Nom}</td><td>${row.Points}</td>`;
+        if(isAdmin){
+            tr.innerHTML += `<td>
+                <button class="modify" onclick="modifierPoints('${row.Nom}')">Modifier</button>
+                <button class="delete" onclick="supprimer('${row.Nom}')">Supprimer</button>
+            </td>`;
+        } else {
+            tr.innerHTML += "<td>—</td>";
+        }
+        tableBody.appendChild(tr);
     });
 }
 
-function addMember(){
-    let name = document.getElementById("nameInput").value;
-    let points = Number(document.getElementById("pointsInput").value);
-    if(!name) return alert("Nom requis");
-
-    let list = loadMembers();
-    list.push({name, points});
-    saveMembers(list);
-    renderTable();
-}
-
-function deleteMember(i){
-    let list = loadMembers();
-    list.splice(i,1);
-    saveMembers(list);
-    renderTable();
-}
-
-function editPoints(i){
-    let list = loadMembers();
-    let newPts = prompt("Nouveaux points pour " + list[i].name, list[i].points);
-    if(newPts === null) return;
-    list[i].points = Number(newPts);
-    saveMembers(list);
-    renderTable();
-}
-
-// Reset automatique du lundi 6h
-function weeklyReset(){
-    let now = new Date();
-    let lastReset = localStorage.getItem("lastReset");
-
-    if(lastReset){ lastReset = new Date(lastReset); }
-
-    let isMonday6AM = now.getDay() === 1 && now.getHours() === 6;
-
-    if(isMonday6AM){
-        let list = loadMembers();
-        list = list.map(m=>({name:m.name, points:0}));
-        saveMembers(list);
-        localStorage.setItem("lastReset", now);
-        renderTable();
+// === FONCTIONS ADMIN ===
+function ajouterJoueur(){
+    let nom = document.getElementById('new-nom').value;
+    let points = document.getElementById('new-points').value;
+    if(nom && points){
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({action:"ajouter", nom:nom, points:points})
+        }).then(()=>{
+            document.getElementById('new-nom').value = "";
+            document.getElementById('new-points').value = "";
+            loadData();
+        });
+    } else {
+        alert("Merci de renseigner un nom et des points.");
     }
 }
 
-setInterval(weeklyReset, 60000);
-renderTable();
+function modifierPoints(nom){
+    let newPoints = prompt("Nouveaux points pour "+nom);
+    if(newPoints!==null){
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({action:"modifier", nom:nom, points:newPoints})
+        }).then(()=>loadData());
+    }
+}
+
+function supprimer(nom){
+    if(confirm("Voulez-vous vraiment supprimer "+nom+" ?")){
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({action:"supprimer", nom:nom})
+        }).then(()=>loadData());
+    }
+}
+
+// Charger tableau initial
+loadData();
 </script>
 
 </body>
