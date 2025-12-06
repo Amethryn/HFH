@@ -2,41 +2,98 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Classement Club Haikyuu</title>
 <style>
-body { font-family: Arial; background:#1f1f1f; color:#fff; text-align:center; padding:20px; }
-table { width:100%; border-collapse: collapse; margin-top:20px; }
-th,td{border:1px solid #444; padding:10px;}
-th{background:#f7d25a;color:#1f1f1f;}
-tr:nth-child(even){background:#2a2a2a;}
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to bottom, #1f1f1f, #121212);
+    color: #fff;
+    margin: 0;
+    padding: 20px;
+}
+h1 {
+    color: #f7d25a;
+    text-align: center;
+    margin-bottom: 20px;
+}
+table {
+    width: 90%;
+    max-width: 700px;
+    margin: auto;
+    border-collapse: collapse;
+    box-shadow: 0 0 10px rgba(0,0,0,0.7);
+}
+th, td {
+    border: 1px solid #444;
+    padding: 12px;
+    text-align: center;
+}
+th {
+    background-color: #f7d25a;
+    color: #1f1f1f;
+    font-size: 16px;
+}
+tr:nth-child(even) {
+    background-color: #2a2a2a;
+}
+tr:hover {
+    background-color: #333;
+}
+a.admin-link {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    padding: 10px 15px;
+    background-color: #4da6ff;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    width: 200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+a.admin-link:hover {
+    background-color: #357acc;
+}
 </style>
 </head>
 <body>
+
 <h1>Classement Club Haikyuu</h1>
+
 <table>
-<thead><tr><th>Nom</th><th>Points</th></tr></thead>
+<thead>
+<tr>
+<th>Nom</th>
+<th>Points</th>
+</tr>
+</thead>
 <tbody id="table-body"></tbody>
 </table>
+
+<a href="https://script.google.com/macros/s/AKfycbwSe4aaI8DYLt9LhgMRKXbS4xP-JUI6LaS_61ZuEBqKhptpx0A4n9y5hKI6Y60UYGMx/exec?admin=true" target="_blank" class="admin-link">Admin : ajouter / modifier joueurs</a>
+
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwSe4aaI8DYLt9LhgMRKXbS4xP-JUI6LaS_61ZuEBqKhptpx0A4n9y5hKI6Y60UYGMx/exec";
 
 function loadData(){
-  fetch(SCRIPT_URL)
-    .then(res=>res.json())
-    .then(data=>{
-      let tbody = document.getElementById('table-body');
-      tbody.innerHTML="";
-      data.sort((a,b)=>b.Points-a.Points);
-      data.forEach(row=>{
-        let tr=document.createElement('tr');
-        tr.innerHTML=`<td>${row.Nom}</td><td>${row.Points}</td>`;
-        tbody.appendChild(tr);
-      });
-    });
+    fetch(SCRIPT_URL)
+    .then(res => res.json())
+    .then(data => {
+        let tbody = document.getElementById('table-body');
+        tbody.innerHTML = "";
+        data.sort((a,b) => b.Points - a.Points);
+        data.forEach(row => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `<td>${row.Nom}</td><td>${row.Points}</td>`;
+            tbody.appendChild(tr);
+        });
+    })
+    .catch(err => console.error("Erreur chargement données:", err));
 }
 
 loadData();
 </script>
-<p><a href="https://script.google.com/macros/s/AKfycbwSe4aaI8DYLt9LhgMRKXbS4xP-JUI6LaS_61ZuEBqKhptpx0A4n9y5hKI6Y60UYGMx/exec?admin=true" target="_blank">Admin : ajouter / modifier joueurs</a></p>
 </body>
 </html>
